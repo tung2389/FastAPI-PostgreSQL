@@ -1,6 +1,9 @@
 from celery import Celery, Task
+from database import db
 from dotenv import load_dotenv
 import os
+
+from service.saveResultToFile import saveResultToFile
 
 load_dotenv()
 RABBITMQ_USER = os.getenv("RABBITMQ_USER")
@@ -12,7 +15,19 @@ celery = Celery(
     broker = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@localhost:5672/{RABBITMQ_VHOST}'   
 )
 
-@celery.task() 
+class FibonacciTask(Task):
+    def on_success(self, result, task_id, args, kwargs):
+        saveResultToFile(task_id, result)
+        
+        cursor = db.cursor()
+        cursor.execute(f""" 
+            INSERT INTO task_table (task_id, result) VALUES ('{task_id}', {result}) 
+            """
+        )
+        db.commit()
+
+
+@celery.task(base = FibonacciTask) 
 def calcFibonacci(n):
     if n <= 0:
         return False

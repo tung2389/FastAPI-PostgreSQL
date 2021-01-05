@@ -8,6 +8,9 @@ fastapi = {extras = ["all"], version = "*"}
 celery = "*"
 python-dotenv = "*"
 psycopg2 = "*"
+bcrypt = "*"
+pyjwt = "*"
+hupper = "*"
 
 [dev-packages]
 
